@@ -8,7 +8,6 @@ app = FastAPI()
 
 def compress_video(video_bytes, ext: str = 'mp4'):
     # Read the video file from the FileStorage object
-
     # Write the video bytes to a temporary file
     with tempfile.NamedTemporaryFile(delete=False) as f:
         f.write(video_bytes)
@@ -17,7 +16,7 @@ def compress_video(video_bytes, ext: str = 'mp4'):
     # Compress the video using ffmpeg
     output_path = f'compressed_video.{ext}'
     command = ['ffmpeg',
-               '-threads', os.environ['FFMPEG_THREADS'],
+               '-threads', '3',
                '-i', input_path,
                '-c:v', 'libx264',
                '-preset', 'medium',
@@ -37,22 +36,10 @@ def compress_video(video_bytes, ext: str = 'mp4'):
     # Return the compressed video as a bytes object
     return compressed_video 
 
-async def parse_input(request: Request): 
-    data: bytes = await request
-    print('data: ', data)
-    return data
-    pass 
-
-""" @app.post('/compress_video/')
-def compress_video_route(data: Depends(parse_input), ext: str = 'mp4'):
-    print(data)
-    video_bytes = compress_video(data, ext)
-    return video_bytes """
-
 @app.post('/compress_form_data_video/')
-def compress_form_data_video_route(file: UploadFile):
-    print('file: ', file)
-    video_bytes = compress_video(file.read(), file.filename.split('.')[-1].lower)
+async def compress_form_data_video_route(file: UploadFile):
+    video_bytes = await file.read()
+    video_bytes = compress_video(video_bytes, file.filename.split('.')[-1].lower)
     return video_bytes
 
 if __name__ == '__main__':
