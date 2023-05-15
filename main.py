@@ -22,8 +22,9 @@ async def compress_video(video, filename: str, ext: str):
         command = ['ffmpeg',
                 '-i', input_path,
                 '-c:v', 'libx264',
-                '-preset', 'medium',
-                '-crf', '45',
+                '-preset', 'ultrafast',
+                '-crf', '35',
+                '-vf', 'scale=360:-1',
                 output_path]
         subprocess.run(command, check=True)
 
