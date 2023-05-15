@@ -46,8 +46,8 @@ async def compress_video(video, filename: str, ext: str):
            os.remove(output_path)
         
 
-@app.post('/compress_form_data_video/')
-async def compress_form_data_video_route(file: UploadFile, filename: str = Form(None), ext: str = Form(None)):  
+@app.post('/compress_video/')
+async def compress_video(file: UploadFile, filename: str = Form(None), ext: str = Form(None)):  
     try: 
         video_bytes = await compress_video(file, 
                                         filename or file.filename,
