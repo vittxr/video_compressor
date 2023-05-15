@@ -38,11 +38,12 @@ async def compress_video(video, filename: str, ext: str):
 
         return compressed_video
     except Exception as e:
+        raise Exception(e)
+    finally: 
         if(os.path.exists(input_path)):
            os.remove(input_path)
         if(os.path.exists(output_path)):
            os.remove(output_path)
-        raise Exception(e)
         
 
 @app.post('/compress_form_data_video/')
