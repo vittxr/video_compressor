@@ -28,6 +28,8 @@ async def compress_video(video, filename: str, ext: str):
                 '-preset', 'ultrafast',
                 '-crf', '35',
                 '-vf', 'scale=360:-1',
+                '-r', '5',
+                '-tune', 'fastdecode',
                 output_path]
         subprocess.run(command, check=True)
 
@@ -50,8 +52,9 @@ async def compress_video(video, filename: str, ext: str):
         if(os.path.exists(output_path)):
            os.remove(output_path)
        
-@app.post('/compress_form_data_video/')
+@app.post('/compress_form_data_video')
 async def compress_video_route(file: UploadFile, filename: str = Form(None), ext: str = Form(None)):  
+    print('video: ', file)
     try: 
         video_bytes = await compress_video(file, 
                                         filename or file.filename,
