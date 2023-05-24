@@ -4,6 +4,8 @@ import subprocess
 import tempfile
 from fastapi.responses import StreamingResponse
 from fastapi import FastAPI, Form, UploadFile 
+from fastapi.middleware.cors import CORSMiddleware
+from utils import getDetailedLog
 
 app = FastAPI()
 
@@ -11,6 +13,7 @@ async def compress_video(video, filename: str, ext: str):
     # Read the video file from the FileStorage object
     # Write the video bytes to a temporary file
     input_path = output_path = ''
+    
     try: 
         video_bytes = await video.read()
         with tempfile.NamedTemporaryFile(delete=False) as f:
@@ -35,28 +38,37 @@ async def compress_video(video, filename: str, ext: str):
         # Remove the temporary files
         os.remove(input_path)
         os.remove(output_path)
-
+        
         return compressed_video
     except Exception as e:
+        # getDetailedLog(e) <- used in development
         raise Exception(e)
+    
     finally: 
         if(os.path.exists(input_path)):
            os.remove(input_path)
         if(os.path.exists(output_path)):
            os.remove(output_path)
-        
-
-@app.post('/compress_video/')
-async def compress_video(file: UploadFile, filename: str = Form(None), ext: str = Form(None)):  
+       
+@app.post('/compress_form_data_video/')
+async def compress_video_route(file: UploadFile, filename: str = Form(None), ext: str = Form(None)):  
     try: 
         video_bytes = await compress_video(file, 
                                         filename or file.filename,
                                         ext or file.filename.split('.')[-1].lower())
+
         # Return a response with the video bytes
         return StreamingResponse(io.BytesIO(video_bytes), media_type='application/octet-stream')
     
     except Exception as e: 
+        # getDetailedLog(e) <- used in development
         return {'error': str(e)}
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_methods=['*'],
+)
 
 if __name__ == '__main__':
     import uvicorn 
