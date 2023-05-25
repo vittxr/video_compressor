@@ -17,7 +17,9 @@ async def compress_video(video, filename: str, ext: str):
     input_path = output_path = ''
     
     try: 
-        video_bytes = await video.read() if isinstance(video, UploadFile) else video
+        print("video type: ", type(video))
+        video_bytes = await video.read() if not isinstance(video, bytes) else video
+        
         with tempfile.NamedTemporaryFile(delete=False) as f:
             f.write(video_bytes)
             input_path = f.name
@@ -45,7 +47,7 @@ async def compress_video(video, filename: str, ext: str):
         
         return compressed_video
     except Exception as e:
-        # getDetailedLog(e) <- used in development
+        getDetailedLog(e) # <- used in development
         raise Exception(e)
     
     finally: 
