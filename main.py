@@ -6,6 +6,8 @@ from fastapi.responses import StreamingResponse
 from fastapi import FastAPI, Form, UploadFile 
 from fastapi.middleware.cors import CORSMiddleware
 from utils import getDetailedLog
+import zipfile
+import io
 
 app = FastAPI()
 
@@ -15,7 +17,7 @@ async def compress_video(video, filename: str, ext: str):
     input_path = output_path = ''
     
     try: 
-        video_bytes = await video.read()
+        video_bytes = await video.read() if isinstance(video, UploadFile) else video
         with tempfile.NamedTemporaryFile(delete=False) as f:
             f.write(video_bytes)
             input_path = f.name
@@ -53,7 +55,7 @@ async def compress_video(video, filename: str, ext: str):
            os.remove(output_path)
        
 @app.post('/compress_form_data_video')
-async def compress_video_route(file: UploadFile, filename: str = Form(None), ext: str = Form(None)):  
+async def compress_form_data_video_route(file: UploadFile, filename: str = Form(None), ext: str = Form(None)):  
     print('video: ', file)
     try: 
         video_bytes = await compress_video(file, 
@@ -64,9 +66,35 @@ async def compress_video_route(file: UploadFile, filename: str = Form(None), ext
         return StreamingResponse(io.BytesIO(video_bytes), media_type='application/octet-stream')
     
     except Exception as e: 
-        # getDetailedLog(e) <- used in development
+        getDetailedLog(e) # <- used in development
         return {'error': str(e)}
 
+@app.post('/compress_zipped_video')
+async def compress_zipped_video_route(file: UploadFile):
+    try:
+        # Read the uploaded ZIP archive
+        zip_data = await file.read()
+
+        # Create an in-memory file-like object from the zip_data
+        zip_file = io.BytesIO(zip_data)
+
+        # Open the ZIP archive
+        with zipfile.ZipFile(zip_file, 'r') as zf:
+            # Assuming the video file is named 'video.mp4' within the ZIP archive
+            video_file = zf.read('video.mp4')
+
+        # Perform video compression or other processing on the extracted video_file
+        print('video_file_size: ', video_file.__sizeof__())
+        video_bytes = await compress_video(video_file, 'video.mp4', 'mp4')
+       
+        # Return a response with the processed video bytes
+        return StreamingResponse(io.BytesIO(video_bytes), media_type='application/octet-stream')
+
+    except Exception as e:
+        # Handle any errors that occur during the processing
+        # getDetailedLog(e) 
+        return {'error': str(e)}
+    
 app.add_middleware(
     CORSMiddleware,
     allow_origins=['*'],
