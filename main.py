@@ -64,7 +64,8 @@ async def compress_form_data_video_route(file: UploadFile, filename: str = Form(
                                         ext or file.filename.split('.')[-1].lower())
 
         # Return a response with the video bytes
-        return StreamingResponse(io.BytesIO(video_bytes), media_type='application/octet-stream')
+        # return StreamingResponse(io.BytesIO(video_bytes), media_type='application/octet-stream')
+        return False
     
     except Exception as e: 
         getDetailedLog(e) # <- used in development
