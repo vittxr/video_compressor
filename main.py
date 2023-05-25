@@ -56,7 +56,6 @@ async def compress_video(video, filename: str, ext: str):
        
 @app.post('/compress_form_data_video')
 async def compress_form_data_video_route(file: UploadFile, filename: str = Form(None), ext: str = Form(None)):  
-    print('video: ', file)
     try: 
         video_bytes = await compress_video(file, 
                                         filename or file.filename,
@@ -72,7 +71,6 @@ async def compress_form_data_video_route(file: UploadFile, filename: str = Form(
 @app.post('/compress_zipped_video')
 async def compress_zipped_video_route(file: UploadFile):
     try:
-        # Read the uploaded ZIP archive
         zip_data = await file.read()
 
         # Create an in-memory file-like object from the zip_data
@@ -83,15 +81,10 @@ async def compress_zipped_video_route(file: UploadFile):
             # Assuming the video file is named 'video.mp4' within the ZIP archive
             video_file = zf.read('video.mp4')
 
-        # Perform video compression or other processing on the extracted video_file
-        print('video_file_size: ', video_file.__sizeof__())
         video_bytes = await compress_video(video_file, 'video.mp4', 'mp4')
-       
-        # Return a response with the processed video bytes
         return StreamingResponse(io.BytesIO(video_bytes), media_type='application/octet-stream')
 
     except Exception as e:
-        # Handle any errors that occur during the processing
         # getDetailedLog(e) 
         return {'error': str(e)}
     
