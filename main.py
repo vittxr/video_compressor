@@ -3,7 +3,7 @@ import os
 import subprocess
 import tempfile
 from fastapi.responses import StreamingResponse
-from fastapi import FastAPI, Form, UploadFile 
+from fastapi import FastAPI, Form, HTTPException, UploadFile 
 from fastapi.middleware.cors import CORSMiddleware
 from utils import getDetailedLog
 import zipfile
@@ -64,12 +64,11 @@ async def compress_form_data_video_route(file: UploadFile, filename: str = Form(
                                         ext or file.filename.split('.')[-1].lower())
 
         # Return a response with the video bytes
-        # return StreamingResponse(io.BytesIO(video_bytes), media_type='application/octet-stream')
-        return False
+        return StreamingResponse(io.BytesIO(video_bytes), media_type='application/octet-stream')
     
     except Exception as e: 
         getDetailedLog(e) # <- used in development
-        return {'error': str(e)}
+        raise HTTPException(status_code=400, detail="Cannot compress video")
 
 @app.post('/compress_zipped_video')
 async def compress_zipped_video_route(file: UploadFile):
@@ -89,7 +88,7 @@ async def compress_zipped_video_route(file: UploadFile):
 
     except Exception as e:
         # getDetailedLog(e) 
-        return {'error': str(e)}
+        raise HTTPException(status_code=400, detail="Cannot compress video")
     
 app.add_middleware(
     CORSMiddleware,
